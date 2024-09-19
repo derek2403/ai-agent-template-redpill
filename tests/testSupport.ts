@@ -2,7 +2,7 @@
 import main from "../src";
 import * as blake from 'blakejs';
 import * as CryptoJS from 'crypto-js';
-import { keccak256 } from 'js-sha3';
+import * as sha3 from 'js-sha3'; // Changed import
 import { wyhash } from 'wyhash';
 
 // Mock function to simulate getting JavaScript code
@@ -82,7 +82,7 @@ globalThis.Wapo = {
           word & 0xff
         ]).flat());
       case 'keccak256':
-        return Uint8Array.from(keccak256.array(messageBytes));
+        return Uint8Array.from(sha3.keccak256.array(messageBytes)); // Updated usage
       default:
         throw new Error(`Unsupported algorithm: ${algorithm}`);
     }
