@@ -76,15 +76,8 @@ async function getHistoricalPrices(): Promise<{ datetime: string; price: number 
         const endDate = new Date();
         endDate.setMinutes(endDate.getMinutes() - 1);
         endDate.setSeconds(0, 0);
-        const startDate = new Date(endDate.getTime() - 29 * 60 * 1000);
-        const dateArray = [];
-        let currentDate = new Date(startDate);
-
-        while (currentDate <= endDate) {
-            dateArray.push(new Date(currentDate));
-            currentDate.setMinutes(currentDate.getMinutes() + 1);
-        }
-        return dateArray.reverse();
+        const startDate = new Date(endDate.getTime() - 10 * 60 * 1000); // 10 minutes ago
+        return [startDate, new Date(startDate.getTime() + 5 * 60 * 1000), endDate];
     };
 
     const formatTimestamp = (unixTimestamp: number) => {
@@ -100,15 +93,13 @@ async function getHistoricalPrices(): Promise<{ datetime: string; price: number 
             const response = await fetch(url);
             const data = await response.json();
 
-            return data.map((entry: any) => {
-                const priceData = entry.parsed[0]?.price;
-                if (priceData) {
-                    const price = parseFloat(priceData.price) / Math.pow(10, Math.abs(priceData.expo));
-                    const publishTime = formatTimestamp(priceData.publish_time);
-                    return { datetime: publishTime, price };
-                }
-                return null;
-            }).filter((entry: any) => entry !== null);
+            const priceData = data[0]?.parsed[0]?.price;
+            if (priceData) {
+                const price = parseFloat(priceData.price) / Math.pow(10, Math.abs(priceData.expo));
+                const publishTime = formatTimestamp(priceData.publish_time);
+                return { datetime: publishTime, price };
+            }
+            return null;
         } catch (err) {
             console.error(`Error fetching price for ${formatTimestamp(timestamp)}:`, err);
             return null;
@@ -119,7 +110,7 @@ async function getHistoricalPrices(): Promise<{ datetime: string; price: number 
     const pricePromises = dateRange.map(date => fetchHistoricalPrice(date));
     const priceData = await Promise.all(pricePromises);
 
-    return priceData.flat().filter(price => price !== null);
+    return priceData.filter(price => price !== null);
 }
 
 function sigmoid(x: number): number {
